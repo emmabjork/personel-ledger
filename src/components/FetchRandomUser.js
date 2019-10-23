@@ -3,39 +3,94 @@ import React, { Component } from "react";
 export default class FetchRandomUser extends Component {
   // Default states for component is set here
   state = {
-    loading: true,
-    person: []
+    currentPosition: 1,
+    hideNext: false,
+    hidePrev: true
   };
 
-  // Asynchronus function that fecth data from an api and put in a person object.
-  async componentDidMount() {
-    const url = "https://api.randomuser.me/?results=30";
-    const response = await fetch(url);
-    const data = await response.json();
-    this.setState({ person: data.results, loading: false });
-  }
+  handleNext = () => {
+    let currpos = this.state.currentPosition;
+    if (currpos * 3 < this.props.recentPersons.length) {
+      currpos++;
+      this.setState({ currentPosition: currpos });
+    }
+
+    if (currpos * 3 >= this.props.recentPersons.length) {
+      this.setState({ hideNext: true });
+    } else {
+      this.setState({ hideNext: false });
+    }
+    if (currpos === 1) {
+      this.setState({ hidePrev: true });
+    } else {
+      this.setState({ hidePrev: false });
+    }
+  };
+
+  handlePrev = () => {
+    let currpos = this.state.currentPosition;
+
+    if (currpos > 1) {
+      currpos--;
+      this.setState({ currentPosition: currpos });
+    }
+
+    if (currpos * 3 >= this.props.recentPersons.length) {
+      this.setState({ hideNext: true });
+    } else {
+      this.setState({ hideNext: false });
+    }
+    if (currpos === 1) {
+      this.setState({ hidePrev: true });
+    } else {
+      this.setState({ hidePrev: false });
+    }
+  };
 
   // This is the rendering function of the component, this is what we output to the screen.
   render() {
-    if (!this.state.person) {
-      return <div>didn't get a person</div>;
-    }
+    let { currentPosition } = this.state;
+    let { recentPersons } = this.props;
 
-    let { person: allpersons } = this.state;
-
-    allpersons = allpersons.filter(
-      person => Date.parse(person.registered.date) > Date.parse("2014-01-01") //members in the last 5 years
+    let filtered = [...recentPersons];
+    filtered = filtered.filter(
+      (p, index) =>
+        index >= (currentPosition - 1) * 3 && index < currentPosition * 3
     );
-    persons = persons.filter((person, index) => index < 3);
+
+    if (recentPersons.length === 0) {
+      return <div>didn't get any person</div>;
+    }
 
     return (
       // This is what we return to the screen, using Semantic UI CSS.
       <div>
-        <header>
-          <h1>Personel Legder of ACME Inc.</h1>
-        </header>
-        <div className="ui five column grid">
-          {allpersons.map(person => (
+        <p className="left" style={{ width: "400px" }}>
+          <button
+            className={
+              this.state.hidePrev
+                ? "ui left labeled icon button"
+                : "ui left labeled icon button primary"
+            }
+            onClick={this.handlePrev}
+          >
+            <i className="left arrow icon"></i>
+            Prev
+          </button>
+          <button
+            className={
+              this.state.hideNext
+                ? "ui right labeled icon button"
+                : "ui right labeled icon button primary"
+            }
+            onClick={this.handleNext}
+          >
+            <i className="right arrow icon"></i>
+            Next
+          </button>
+        </p>
+        <div className="ui six column grid">
+          {filtered.map(person => (
             <div className="column" style={{ textTransform: "capitalize" }}>
               <div class="ui fluid card">
                 <div class="image">
